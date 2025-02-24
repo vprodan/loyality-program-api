@@ -1,0 +1,87 @@
+networks:
+  public:
+    internal: false
+  private:
+    internal: true
+
+services:
+  app:
+    image: node:latest
+    container_name: app
+    depends_on:
+      - db
+      - redis
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - public
+      - private
+    ports:
+      - "3000:${PORT}"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.pnpm-store
+    working_dir: /app
+    command: ["pnpm", "dev"]
+
+  db:
+    image: postgres:latest
+    container_name: db
+    networks:
+      - public
+      - private
+    environment:
+      POSTGRES_DB: ${DB_NAME:-app}
+      POSTGRES_USER: ${DB_USER:-app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      - public
+      - private
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis:/data
+
+  benchmark:
+    image: alpine:latest
+    container_name: benchmark
+    profiles: ["benchmark"]
+    depends_on:
+      - app
+    networks:
+      - private
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=64M,mode=1777
+    user: "1000:1000"
+    restart: "no"
+    mem_limit: 256m
+    pids_limit: 50
+    ulimits:
+      nofile: 1024
+    volumes:
+      - ./bin/linux:/app:ro
+    working_dir: /app/${ARCH:-arm64}
+    entrypoint: ["/app/${ARCH:-arm64}/loyalty"]
+    command:
+      - --target=http://app:${PORT}/webhook
+      - --concurrency=${CONCURRENCY:-1}
+      - --delay=${DELAY:-500ms}
+
+volumes:
+  db:
+  redis:
