@@ -7,6 +7,12 @@ interface Response {
 }
 
 const schema: FastifySchema = {
+  params: {
+    type: "object",
+    properties: {
+      customerId: { type: "string", format: "uuid" },
+    },
+  },
   body: {
     type: "object",
     required: ["points"],
@@ -21,17 +27,10 @@ const schema: FastifySchema = {
         pointsAvailable: { type: "integer" },
       },
     },
-    404: {
-      type: "object",
-      properties: {
-        message: { type: "string" },
-      },
-    },
     422: {
       type: "object",
       properties: {
         message: { type: "string" },
-        pointsAvailable: { type: "integer" },
       },
     },
   },

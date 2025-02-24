@@ -1,11 +1,29 @@
-# Loyalty points API Case
+# Loyality Program API
+
+[Case Description](case-description.md)
 
 A TypeScript-based Express.js application with Drizzle ORM and PrstgreSQL database integration.
 
+## Architecture Overview
+
+This implementation leverages a two-thread model:
+
+- **API Thread:** Runs the main Express server handling HTTP requests.
+- **Webhook Consumer Thread:** Runs as a separate worker (via cluster/worker threads) to process webhook events using Redis Streams.
+- **PostgreSQL Database:**  
+  The application uses PostgreSQL as its primary persistent data storage. Database interactions are handled using the Drizzle ORM, which facilitates type-safe queries and migrations. This robust relational database system ensures data integrity and provides advanced querying capabilities for handling complex relationships.
+
+- **Redis:**  
+  Redis is employed for its high-performance key-value storage capabilities. In this architecture, Redis is used primarily for:
+  - **Caching:** Speeding up data retrieval by caching frequently accessed data.
+  - **Message Streaming:** Serving as the backbone for the webhook consumer thread. Redis Streams allow efficient, ordered, and scalable processing of webhook events, ensuring the API thread operates independently of background processing.
+
 ## Prerequisites
 
-- Node.js >= 22.14.0
+- Node.js ≥ 22.14.0
 - pnpm (you can use your favorite package manager)
+- PostgreSQL
+- Redis
 
 ## Installation
 
@@ -44,12 +62,9 @@ REDIS_PORT=6379
 pnpm drizzle-kit migrate
 ```
 
-## Scripts
+## Tests [WIP]
 
 ```bash
-# Run development server
-npm run dev
-
 # Run tests
 npm test
 ```
@@ -92,7 +107,8 @@ To run benchmark you need to setup previous step.
 - TypeScript - Programming language
 - Express.js - Web framework
 - Drizzle ORM - Database ORM
-- LibSQL - Database
+- PostgreSQL - Database
+- Redis - Key-value storage
 
 ## License
 

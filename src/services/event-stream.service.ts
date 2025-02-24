@@ -17,7 +17,7 @@ const DELAYED_EVENTS_ID_MAP = new Map<string, string[]>();
 /**
  * Pushing incoming events to the queue
  */
-export function pushEvent(event: WebhookEvent) {
+function pushEvent(event: WebhookEvent) {
   return redis.xadd(EVENT_STREAM, `*`, "WebhookEvent", JSON.stringify(event));
 }
 
@@ -25,7 +25,7 @@ export function pushEvent(event: WebhookEvent) {
  * Consuming incoming events
  * better to use a worker_thread/cluster or a separate service for this
  */
-export async function consumeEvents(logger: FastifyBaseLogger) {
+async function consumeEvents(logger: FastifyBaseLogger) {
   logger.info("Event Worker started");
 
   // Read events from the stream

@@ -10,7 +10,7 @@ const schema: FastifySchema = {
   params: {
     type: "object",
     properties: {
-      customerId: { type: "string" },
+      customerId: { type: "string", format: "uuid" },
     },
   },
   response: {
@@ -20,14 +20,9 @@ const schema: FastifySchema = {
         pointsAvailable: { type: "integer" },
       },
     },
-    404: {
-      type: "object",
-      properties: {
-        message: { type: "string" },
-      },
-    },
   },
 };
+
 async function handler(
   this: FastifyInstance,
   request: FastifyRequest<{ Params: { customerId: string } }>,

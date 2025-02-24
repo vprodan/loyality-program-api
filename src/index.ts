@@ -6,8 +6,8 @@ import eventStreamService from "./services/event-stream.service.js";
 const app = build();
 
 /**
- * Doing forking to handle workers in separate thread.
- * Better to use a worker_thread/cluster or a separate service for this
+ * Doing fork to handle webhook events in separate thread.
+ * Consider to use a worker_thread/cluster or a separate service for this
  */
 if (cluster.isPrimary) {
   try {
@@ -27,5 +27,6 @@ if (cluster.isPrimary) {
     throw err;
   }
 } else {
+  // Consuming webhook events using Redis Stream
   await eventStreamService.consumeEvents(app.log.child({}, { msgPrefix: "[Event Worker] " }));
 }
