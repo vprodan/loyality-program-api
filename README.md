@@ -42,17 +42,17 @@ cp .env.example .env
 Example:
 
 ```
-NODE_ENV=dev
+NODE_ENV=dev # Use `dev` to enable swagger docs
 LOG_LEVEL=debug
 PORT=3000
 
-DB_HOST=db
+DB_HOST=localhost # or `db` for docker
 DB_PORT=5432
 DB_NAME=app
 DB_USER=app
 DB_PASSWORD=randompassword
 
-REDIS_HOST=redis
+REDIS_HOST=localhost # or `redis` for docker
 REDIS_PORT=6379
 ```
 
@@ -62,11 +62,37 @@ REDIS_PORT=6379
 pnpm drizzle-kit migrate
 ```
 
-## Tests [WIP]
+## Run
+
+```bash
+# Run in watch mode
+pnpm dev
+
+# Build and run
+pnpm start
+```
+
+## Build
+
+```bash
+# Build, will produce *.js into /dist
+pnpm build
+```
+
+## Tests
 
 ```bash
 # Run tests
-npm test
+pnpm test
+
+# Run tests with coverage report
+pnpm test --coverage
+
+# Run tests with watch mode
+pnpm test:dev
+
+# Run tests with watch mode and nice web UI
+pnpm test:dev --ui
 ```
 
 ## Docker
@@ -85,6 +111,7 @@ docker-compose logs -f
 ```
 
 The application will be available at `http://localhost:3000`.
+The Swagger/OpenAPI documentation will be available at `http://localhost:3000/documentation`.
 
 Services:
 
@@ -104,12 +131,13 @@ To run benchmark you need to setup previous step.
 
 ## Tech Stack
 
-- TypeScript - Programming language
-- Express.js - Web framework
-- Drizzle ORM - Database ORM
-- PostgreSQL - Database
-- Redis - Key-value storage
+- **TypeScript** - Strongly typed programming language that builds on JavaScript, giving you better tooling at any scale
+- **Fastify** - Fast and low overhead web framework
+- **Drizzle ORM** - Headless TypeScript ORM with a head. 🐲
+- **PostgreSQL** - Powerful, open source object-relational database system
+- **Redis** - Open-source, in-memory data structure store
+- **Vitest** - Next Generation Testing Framework
 
 ## License
 
-MIT © Vadym Prodan
+[MIT © Vadym Prodan](LICENSE)

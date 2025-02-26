@@ -1,111 +1,58 @@
-import { and, eq, sql, isNull, gt } from "drizzle-orm";
-
-import { NotEnoughPointsError } from "../api/errors/not-enough-points.error.js";
-import { db } from "../db/index.js";
-import { pointTransactions } from "../db/schema.js";
-
-const POINTS_ALIVE_INTERVAL = "6 months";
-
-const getCustomerPointsCondition = (customerId: string) =>
-  and(
-    isNull(pointTransactions.removedAt),
-    eq(pointTransactions.customerId, customerId),
-    gt(pointTransactions.createdAt, sql`NOW() - INTERVAL '${sql.raw(POINTS_ALIVE_INTERVAL)}'`),
-  );
+import { NotEnoughPointsError } from "@api/errors/not-enough-points.error.js";
+import pointTransactionRepository from "@db/point-transaction.repository.js";
 
 export class LoyalityPointsService {
-  async consumePoints(customerId: string, points: number): Promise<number> {
-    points = Math.max(0, points);
+  async getAvailable(customerId: string): Promise<number> {
+    return pointTransactionRepository.getAvailablePoints(customerId);
+  }
 
-    const totalActivePoints = await this.getPoints(customerId);
+  async consume(customerId: string, count: number): Promise<number> {
+    count = Math.max(0, count); // prevent negative values
 
-    if (totalActivePoints < points) {
-      throw new NotEnoughPointsError(totalActivePoints);
+    const availablePoints = await this.getAvailable(customerId);
+    if (availablePoints < count) {
+      throw new NotEnoughPointsError(availablePoints);
     }
 
-    const query = db
-      .select({
-        id: pointTransactions.id,
-        points: sql<number>`(${pointTransactions.points} - ${pointTransactions.pointsUsed}) AS points`,
-      })
-      .from(pointTransactions)
-      .where(getCustomerPointsCondition(customerId))
-      .orderBy(pointTransactions.createdAt);
+    const transactions = await pointTransactionRepository.findByCustomerId(customerId);
 
-    let totalPointsUsed = 0;
-    await db.transaction(async (tx) => {
-      await tx.execute(sql`DECLARE cursor CURSOR FOR ${query} FOR UPDATE;`);
-
-      while (totalPointsUsed < points) {
-        const result = await tx
-          .execute(sql`FETCH 1 FROM cursor;`)
-          .then((res) => res.rows as Awaited<typeof query>);
-        if (result.length === 0) {
-          break;
-        }
-
-        const item = result[0];
-        const pointsUsed = Math.min(points - totalPointsUsed, item.points);
-        const removedAt = item.points === pointsUsed ? sql`NOW()` : null;
-        totalPointsUsed += pointsUsed;
-
-        await tx
-          .update(pointTransactions)
-          .set({
-            pointsUsed: sql`${pointTransactions.pointsUsed} + ${pointsUsed}`,
-            removedAt,
-          })
-          .where(eq(pointTransactions.id, item.id));
+    let needToConsume = count;
+    const updateSet: { id: number; available: number }[] = [];
+    for (const tr of transactions) {
+      if (needToConsume === 0) {
+        break;
       }
-    });
 
-    return totalActivePoints - points;
+      const pointsToUse = Math.min(tr.available, needToConsume);
+      needToConsume -= pointsToUse;
+
+      const available = tr.available - pointsToUse;
+
+      updateSet.push({ id: tr.id, available });
+    }
+
+    if (updateSet.length > 0) {
+      await pointTransactionRepository.updateManyAvailable(updateSet);
+    }
+
+    return availablePoints - count;
   }
 
-  async getPoints(customerId: string): Promise<number> {
-    const result = await db
-      .select({
-        totalActivePoints: sql<number>`SUM(${pointTransactions.points} - ${pointTransactions.pointsUsed})`,
-      })
-      .from(pointTransactions)
-      .where(getCustomerPointsCondition(customerId));
-
-    return result?.[0].totalActivePoints ?? 0;
+  async orderPlaced(customerId: string, orderId: string, orderAmount: number): Promise<void> {
+    const earned = this.getPointsByOrderAmount(orderAmount);
+    await pointTransactionRepository.create(customerId, orderId, earned);
   }
 
-  calculatePoints(totalAmount: number) {
+  async orderCancelled(orderId: string): Promise<void> {
+    await pointTransactionRepository.removeByOrderId(orderId);
+  }
+
+  async customerRemoved(customerId: string): Promise<void> {
+    await pointTransactionRepository.removeByCustomerId(customerId);
+  }
+
+  private getPointsByOrderAmount(totalAmount: number) {
     return Math.floor(totalAmount / 50);
-  }
-
-  /**
-   * Soft removing points by order id
-   */
-  async removePointsByOrderId(orderId: string) {
-    await db
-      .update(pointTransactions)
-      .set({ removedAt: sql`NOW()` })
-      .where(eq(pointTransactions.orderId, orderId));
-  }
-
-  /**
-   * Soft removing points by customer id
-   */
-  async removePointsByCustomerId(customerId: string) {
-    await db
-      .update(pointTransactions)
-      .set({ removedAt: sql`NOW()` })
-      .where(eq(pointTransactions.customerId, customerId));
-  }
-
-  /**
-   * Adds points to the customer by order id
-   */
-  async addPoints(customerId: string, orderId: string, points: number) {
-    await db.insert(pointTransactions).values({
-      customerId,
-      orderId,
-      points,
-    });
   }
 }
 

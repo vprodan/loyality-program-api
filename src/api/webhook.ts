@@ -1,7 +1,5 @@
+import webhookEventProduserService from "@services/webhook-event-producer.service.js";
 import type { FastifyInstance, FastifyRequest, FastifySchema } from "fastify";
-
-import type { WebhookEvent } from "../../types/webhook-events.d.ts";
-import eventStreamService from "../services/event-stream.service.js";
 
 const schema: FastifySchema = {
   body: {
@@ -27,7 +25,7 @@ const schema: FastifySchema = {
 
 async function handler(request: FastifyRequest<{ Body: WebhookEvent }>) {
   const event = request.body;
-  await eventStreamService.pushEvent(event);
+  await webhookEventProduserService.produce(event);
 
   return { success: true };
 }

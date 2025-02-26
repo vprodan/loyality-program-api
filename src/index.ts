@@ -1,32 +1,33 @@
+import "dotenv/config";
 import cluster from "cluster";
 
-import { build } from "./app.js";
-import eventStreamService from "./services/event-stream.service.js";
-
-const app = build();
+import { build } from "@api/index.js";
+import webhookEventConsumerService from "@services/webhook-event-consumer.service.js";
 
 /**
  * Doing fork to handle webhook events in separate thread.
  * Consider to use a worker_thread/cluster or a separate service for this
  */
 if (cluster.isPrimary) {
+  const api = build();
+
   try {
-    await app.listen({
+    await api.listen({
       host: process.env.HOST ?? "0.0.0.0",
       port: +(process.env.PORT ?? 3000),
     });
     cluster.fork();
 
     cluster.on("exit", (worker, code, signal) => {
-      app.log.error(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`);
-      app.log.info("Starting a new worker");
+      api.log.error(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`);
+      api.log.info("Starting a new worker");
       cluster.fork();
     });
   } catch (err) {
-    app.log.error(err);
+    api.log.error(err);
     throw err;
   }
 } else {
-  // Consuming webhook events using Redis Stream
-  await eventStreamService.consumeEvents(app.log.child({}, { msgPrefix: "[Event Worker] " }));
+  // Consuming webhook events
+  await webhookEventConsumerService.start();
 }

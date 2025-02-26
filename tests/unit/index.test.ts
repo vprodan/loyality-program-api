@@ -1,9 +1,9 @@
 import cluster from "cluster";
 
-import { describe, it, vi, expect, beforeEach } from "vitest";
+import { describe, vi, beforeEach, it, expect } from "vitest";
 
-import { build } from "../../src/app.js";
-import eventStreamService from "../../src/services/event-stream.service.js";
+import { build } from "../../src/api/index.js";
+import webhookEventConsumerService from "../../src/services/webhook-event-consumer.service.js";
 
 vi.mock("dotenv/config", () => ({}));
 
@@ -26,13 +26,13 @@ const mockedApp = {
   log: mockedAppLog,
 };
 
-vi.mock("../src/app.js", () => ({
+vi.mock("../../src/api/index.js", () => ({
   build: vi.fn(() => mockedApp),
 }));
 
-vi.mock("../src/services/event-stream.service.js", () => ({
+vi.mock("../../src/services/webhook-event-consumer.service.js", () => ({
   default: {
-    consumeEvents: vi.fn(),
+    start: vi.fn(),
   },
 }));
 
@@ -70,7 +70,7 @@ describe("Server initialization", () => {
   it("should handle worker process exit", async () => {
     await import("../../src/index.js");
 
-    const exitCallback = vi.mocked(cluster.on).mock.calls[0][1] as (...args) => void;
+    const exitCallback = vi.mocked(cluster.on).mock.calls[0][1] as (...args: any) => void;
     exitCallback({ process: { pid: 1 } }, 1, "SIGTERM");
 
     expect(mockedApp.log.error).toHaveBeenCalled();
@@ -83,9 +83,9 @@ describe("Server initialization", () => {
 
     await import("../../src/index.js");
 
-    expect(build).toHaveBeenCalled();
+    expect(build).not.toHaveBeenCalled();
     expect(mockedApp.listen).not.toHaveBeenCalled();
-    expect(eventStreamService.consumeEvents).toHaveBeenCalledWith(mockedChildLogger);
+    expect(webhookEventConsumerService.start).toHaveBeenCalled();
   });
 
   it("should handle server errors properly", async () => {

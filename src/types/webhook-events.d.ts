@@ -6,7 +6,7 @@ interface BaseEvent {
   Payload: Record<string, unknown>;
 }
 
-export interface OrderReturnedEvent extends BaseEvent {
+interface OrderReturnedEvent extends BaseEvent {
   EventName: "OrderReturned";
   EntityName: "Order";
   Payload: {
@@ -14,7 +14,7 @@ export interface OrderReturnedEvent extends BaseEvent {
   };
 }
 
-export interface OrderPlacedEvent extends BaseEvent {
+interface OrderPlacedEvent extends BaseEvent {
   EventName: "OrderPlaced";
   EntityName: "Order";
   Payload: {
@@ -24,7 +24,7 @@ export interface OrderPlacedEvent extends BaseEvent {
   };
 }
 
-export interface OrderCanceledEvent extends BaseEvent {
+interface OrderCanceledEvent extends BaseEvent {
   EventName: "OrderCanceled";
   EntityName: "Order";
   Payload: {
@@ -32,7 +32,7 @@ export interface OrderCanceledEvent extends BaseEvent {
   };
 }
 
-export interface CustomerDeletedEvent extends BaseEvent {
+interface CustomerDeletedEvent extends BaseEvent {
   EventName: "CustomerDeleted";
   EntityName: "Customer";
   Payload: {
@@ -40,7 +40,7 @@ export interface CustomerDeletedEvent extends BaseEvent {
   };
 }
 
-export interface CustomerCreatedEvent extends BaseEvent {
+interface CustomerCreatedEvent extends BaseEvent {
   EventName: "CustomerCreated";
   EntityName: "Customer";
   Payload: {
@@ -48,7 +48,7 @@ export interface CustomerCreatedEvent extends BaseEvent {
   };
 }
 
-export type WebhookEvent =
+declare type WebhookEvent =
   | OrderReturnedEvent
   | OrderPlacedEvent
   | OrderCanceledEvent

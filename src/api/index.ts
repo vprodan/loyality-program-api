@@ -1,22 +1,14 @@
 import "dotenv/config";
+import pointsConsume from "@api/points-consume.js";
+import pointsGet from "@api/points-get.js";
+import webhook from "@api/webhook.js";
+import loggerInstance from "@utils/logger.js";
 import fastify from "fastify";
-
-import pointsConsume from "./api/points-consume.js";
-import pointsGet from "./api/points-get.js";
-import webhook from "./api/webhook.js";
 
 export function build() {
   const app = fastify({
     ignoreTrailingSlash: true,
-    logger: {
-      level: process.env.LOG_LEVEL ?? "info",
-      transport: {
-        target: "@fastify/one-line-logger",
-        options: {
-          colorize: true,
-        },
-      },
-    },
+    loggerInstance,
   });
 
   if (process.env.NODE_ENV === "dev") {

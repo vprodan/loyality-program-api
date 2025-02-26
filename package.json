@@ -5,17 +5,16 @@
   "main": "dist/app.js",
   "type": "module",
   "scripts": {
-    "start": "node dist/index.js",
-    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "build": "tsc && tsc-alias",
     "dev": "tsx watch src/index.ts",
-    "lint": "eslint --ext .ts src",
-    "lint:fix": "eslint --fix --ext .ts src",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "vitest run",
+    "test:dev": "vitest",
+    "prepare": "husky"
   },
   "keywords": [
     "loyality",
@@ -40,9 +39,12 @@
     "drizzle-orm": "^0.39.3",
     "fastify": "^5.2.1",
     "ioredis": "^5.5.0",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "pino": "^9.6.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.7.1",
+    "@commitlint/config-conventional": "^19.7.1",
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.5",
     "@types/pg": "^8.11.11",
@@ -54,10 +56,14 @@
     "eslint-plugin-prettier": "^5.2.3",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "prettier": "^3.5.2",
+    "tsc-alias": "^1.8.11",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.1",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.6"
   },
   "volta": {

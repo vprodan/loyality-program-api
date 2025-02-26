@@ -1,6 +1,5 @@
+import loyalityPointsService from "@services/loyality-points.service.js";
 import type { FastifyInstance, FastifyRequest, FastifySchema } from "fastify";
-
-import loyalityPointsService from "../services/loyality-points.service.js";
 
 interface Response {
   pointsAvailable: number;
@@ -43,7 +42,7 @@ async function handler(
   const { customerId } = request.params;
   const { points } = request.body;
 
-  const pointsAvailable = await loyalityPointsService.consumePoints(customerId, points);
+  const pointsAvailable = await loyalityPointsService.consume(customerId, points);
 
   return { pointsAvailable };
 }
