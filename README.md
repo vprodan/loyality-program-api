@@ -39,9 +39,9 @@ Copy `.env.example` to `.env` file in the root directory:
 cp .env.example .env
 ```
 
-Example:
+_Example:_
 
-```
+```dotenv
 NODE_ENV=dev # Use `dev` to enable swagger docs
 LOG_LEVEL=debug
 PORT=3000
@@ -59,6 +59,7 @@ REDIS_PORT=6379
 ## Database Setup
 
 ```bash
+# Run migrations
 pnpm drizzle-kit migrate
 ```
 
@@ -97,11 +98,16 @@ pnpm test:dev --ui
 
 ## Docker
 
+[_Make sure you did the environment setup before_](#environment-setup)
+
 Run with Docker Compose:
 
 ```bash
-# Start services
-docker-compose up -d
+# Build and Start services
+docker-compose up -d --build
+
+# Run migrations on docker container
+docker-compose exec app pnpm drizzle-kit migrate
 
 # Stop services
 docker-compose down
@@ -140,4 +146,4 @@ To run benchmark you need to setup previous step.
 
 ## License
 
-[MIT © Vadym Prodan](LICENSE)
+All files are covered by the GNU GPLv3 license, see [LICENSE](LICENSE).
